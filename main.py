@@ -14,15 +14,16 @@ all_info = []
 
 month = 8
 day = 14
+year = 2021
 
 end_month = now.month
 end_day = now.day
-
+end_year = now.year
 
 def build_url(_round, only_date):
     main_part = 'https://stat.taucetistation.org/html/'
 
-    year = '2021/'
+    _year = str(year) + '/'
 
     _month = str(month)
     if month < 10:
@@ -35,13 +36,13 @@ def build_url(_round, only_date):
     _day += '/'
 
     if only_date:
-        return main_part + year + _month + _day
+        return main_part + _year + _month + _day
 
     round = 'round-' + str(_round) + '/'
 
     end = "stat.json"
 
-    return main_part + year + _month + _day + round + end
+    return main_part + _year + _month + _day + round + end
 
 
 def recursion_write_info(_dict):
@@ -109,14 +110,21 @@ def get_round_ids(url):
 
 
 if __name__ == '__main__':
-    while month != end_month or day != end_day:
-        rounds_on_page = get_round_ids(build_url(1, True))
+    while month != end_month or day != end_day or year != end_year:
+        url = build_url(1, True)
+        rounds_on_page = get_round_ids(url)
         if rounds_on_page == 404:
+            print("404 Error:" + url)
             if day == 31:
                 day = 1
                 month += 1
             else:
                 day += 1
+
+            if month == 12 and day == 31:
+                year += 1
+                day = 1
+                month = 1
             continue
         indx = 1
         for round in rounds_on_page:
@@ -130,6 +138,11 @@ if __name__ == '__main__':
                     month += 1
                 else:
                     day += 1
+
+                if month == 12 and day == 31:
+                    year += 1
+                    day = 1
+                    month = 1
             indx += 1
 
     write_in_csv()
