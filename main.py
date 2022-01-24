@@ -1,9 +1,7 @@
-import requests
 import csv
 import datetime
-import re
 
-from bs4 import BeautifulSoup
+import requests
 
 now = datetime.datetime.now()
 
@@ -20,8 +18,9 @@ end_month = now.month
 end_day = now.day
 end_year = now.year
 
+
 def build_url(_round, only_date):
-    main_part = 'https://stat.taucetistation.org/html/'
+    main_part = 'https://stat.taucetistation.org/json/'
 
     _year = str(year) + '/'
 
@@ -38,7 +37,7 @@ def build_url(_round, only_date):
     if only_date:
         return main_part + _year + _month + _day
 
-    round = 'round-' + str(_round) + '/'
+    round = str(_round) + '/'
 
     end = "stat.json"
 
@@ -46,8 +45,7 @@ def build_url(_round, only_date):
 
 
 def recursion_write_info(_dict):
-    parsed_info = {}
-    parsed_info['date'] = "{}.{}.{}".format(day, month, 2021)
+    parsed_info = {'date': "{}.{}.{}".format(day, month, 2021)}
     for field in _dict:
         if field in EXCLUDE_FIELDS:
             continue
@@ -91,20 +89,11 @@ def get_round_ids(url):
     page = requests.get(url)
     if page.status_code == 404:
         return 404
-    soup = BeautifulSoup(page.text, "html.parser")
-
-    tags = soup.findAll('a')
-
-    parsed = []
-
-    for tag in tags:
-        parsed.append(re.search(r'[\d][\d][\d][\d][\d]', str(tag)))
+    json_on_page = page.json()
 
     all_ids = []
-    for parse in parsed:
-        if parse:
-            string = parse.group()
-            all_ids.append(int(string))
+    for dict in json_on_page:
+        all_ids.append(dict["name"])
 
     return all_ids
 
@@ -126,13 +115,13 @@ if __name__ == '__main__':
                 day = 1
                 month = 1
             continue
-        indx = 1
+        index = 1
         for round in rounds_on_page:
             url = build_url(round, False)
             page = requests.get(url)
             print("parsed:" + url)
             write_info(page)
-            if (indx == len(rounds_on_page)):
+            if index == len(rounds_on_page):
                 if day == 31:
                     day = 1
                     month += 1
@@ -143,6 +132,6 @@ if __name__ == '__main__':
                     year += 1
                     day = 1
                     month = 1
-            indx += 1
+            index += 1
 
     write_in_csv()
